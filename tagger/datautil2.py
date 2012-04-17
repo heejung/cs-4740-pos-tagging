@@ -25,7 +25,6 @@ def get_tag_word_matrix(filename):
                 count_matrix[key] = count_matrix[key] + 1.
             else:
                 count_matrix[key] = 1.
-
     tags = {}
     matrix_with_unknown = {}
     min_count = min(count_matrix.values())
@@ -47,20 +46,20 @@ def get_tag_word_matrix(filename):
                 matrix_with_unknown[word] = {}
             matrix_with_unknown[word][tag] = v
         if tags.has_key(tag):
-            tags[tag] =  tags[tag] + 1.
+            tags[tag] =  tags[tag] + v
         else:
-            tags[tag] = 1.
+            tags[tag] = v
 
     tag_size = float(len(tags))
-    for (word,tag_dict) in matrix_with_unknown.items():
-        for (tag, v) in tag_dict.items():
-            matrix_with_unknown[word][tag] = (tag_dict[tag] + 1.) / (tags[tag] + tag_size)
-
     import math
+    minprob = 0.
     for (w,tag_dict) in matrix_with_unknown.items():
         for (tag, prob) in tag_dict.items():
             matrix_with_unknown[w][tag] = math.log((matrix_with_unknown[w][tag] + 1.) / (tag_size + tags[tag]))
-        matrix_with_unknown[w]["SMOOTH"] = math.log(1. / tag_size)
+            minprob = min(matrix_with_unknown[w][tag], minprob)
+    minprob = minprob - 0.001
+    for (w,tag_dict) in matrix_with_unknown.items():
+        matrix_with_unknown[w]["SMOOTH"] = minprob
 
     return (matrix_with_unknown, tags)
 
@@ -115,15 +114,18 @@ def get_tag_n_gram(n, filename, tags, bi):
             count_matrix[k] = math.log(count_matrix[k] / tot) 
     elif n==2:
         tag_size = float(len(tags))
+        minprob = 0.
         for (k,v) in count_matrix.items():
             tag = k.split()[1] 
             count_matrix[k] = math.log((count_matrix[k] + 1.) / (tag_size + tags[tag]))
-        count_matrix["SMOOTH"] = math.log(1. / tag_size)
+            minprob = min(minprob, count_matrix[k])
+        count_matrix["SMOOTH"] = minprob - 0.001
     elif n>2:
         tag_size = float(len(tags))
         tagtag_size = tag_size
         for i in xrange(1,n):
             tagtag_size = tagtag_size * tag_size 
+        minprob = 0.
         for (k,v) in count_matrix.items():
             tagtag = " ".join(k.split()[1::])
             if bi.has_key(tagtag):
@@ -131,7 +133,8 @@ def get_tag_n_gram(n, filename, tags, bi):
             else:
                 tagval = 0.
             count_matrix[k] = math.log((count_matrix[k] + 1.) / (tagtag_size + tagval))
-        count_matrix["SMOOTH"] = math.log(1. / tagtag_size)
+            minprob = min(minprob, count_matrix[k])
+        count_matrix["SMOOTH"] = minprob - 0.001
 
     return (count_matrix, counts)
 

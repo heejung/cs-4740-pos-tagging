@@ -6,6 +6,7 @@ from probability2 import SmoothedDistribution
 #from probability import ProbabilityDistribution
 import json
 import math
+import sys
 
 """
 Class:  ViterbiMath(observation_table, trans_matrix_bi, trans_matrix_tri, tags)
@@ -141,8 +142,8 @@ class ViterbiMath:
         next_column = {}
         c_prev = c - 1
         for tag_cur in self.tags:
-            max_prob = 0.0
-            max_tag_prev = None
+            max_prob = -sys.float_info.max 
+            max_tag_prev = None 
             max_tuple = (max_prob, max_tag_prev)
             obs_tag_prob = self.obsT[word + " " + tag_cur]
 
@@ -150,7 +151,8 @@ class ViterbiMath:
                 prev_prob = dt.prob(c_prev, tag_prev)
                 trans_prob = self.transmBi[tag_cur + " " + tag_prev]
                 prob = obs_tag_prob + trans_prob + prev_prob
-                max_tuple = max(max_tuple, (prob, tag_prev))
+                if max_tuple[0] <= prob:
+                    max_tuple = (prob, tag_prev)
 
             next_column[tag_cur] = max_tuple
         return next_column
@@ -175,7 +177,7 @@ class ViterbiMath:
         c_prev1 = c - 1
         c_prev2 = c - 2
         for tag_cur in self.tags:
-            max_prob = 0.0
+            max_prob = -sys.float_info.max
             max_tag_prev = None
             max_tuple = (max_prob, max_tag_prev)
             obs_tag_prob = self.obsT[word + " " + tag_cur]
@@ -185,8 +187,9 @@ class ViterbiMath:
                 prev2_prob = dt.prob(c_prev2, tag_prev2)
                 trans_prob = self.transmTri[tag_cur + " " + tag_prev2 + " " + tag_prev1]
                 prob = obs_tag_prob + trans_prob + prev2_prob
-                max_tuple = max(max_tuple, (prob, tag_prev1))
-            
+                if max_tuple[0] <= prob:
+                    max_tuple = (prob, tag_prev1)
+           
             next_column[tag_cur] = max_tuple
         return next_column
 
