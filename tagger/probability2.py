@@ -1,16 +1,15 @@
 from collections import Mapping
 
 class SmoothedDistribution(Mapping):
-    def __init__(self, conditioned_count, tag_count):
+    def __init__(self, conditioned_count):
         self._conditioned_count = conditioned_count
-        self._tag_count = tag_count
-
+    
     def __iter__(self):
-        return self._tag_count.__iter__()
+        return self._conditioned_count.__iter__()
 
     def __len__(self):
-        return self._tag_count.__len__()
-
+        return self._conditioned_count.__len__()
+    
     def __getitem__(self, key):
         #observation table
         if self._conditioned_count.has_key("UNK"):

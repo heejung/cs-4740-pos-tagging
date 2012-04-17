@@ -3,7 +3,6 @@
 
 from DynamicTable import DynamicTable
 from probability2 import SmoothedDistribution
-#from probability import ProbabilityDistribution
 import json
 import math
 import sys
@@ -35,9 +34,9 @@ class ViterbiMath:
 #            with open(vocab_count) as f:
 #                vocab_dict = json.loads(f.read())
             
-            self.obsT = SmoothedDistribution(tag_word_dict, unigram_dict)
-            self.transmBi = SmoothedDistribution(bigram_dict, unigram_dict)
-            self.transmTri = SmoothedDistribution(trigram_dict, unigram_dict)
+            self.obsT = SmoothedDistribution(tag_word_dict)
+            self.transmBi = SmoothedDistribution(bigram_dict)
+            self.transmTri = SmoothedDistribution(trigram_dict)
             self.tags = unigram_dict.keys()
         else:
             self.tags = tag_word_count
@@ -181,7 +180,6 @@ class ViterbiMath:
             max_tag_prev = None
             max_tuple = (max_prob, max_tag_prev)
             obs_tag_prob = self.obsT[word + " " + tag_cur]
-
             for tag_prev1 in self.tags:
                 tag_prev2 = dt.last(c_prev1, tag_prev1)
                 prev2_prob = dt.prob(c_prev2, tag_prev2)
