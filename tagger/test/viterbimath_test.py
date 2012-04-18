@@ -14,13 +14,13 @@ class VeterbiMathTest(unittest.TestCase):
             "VB NN NN": 0.1, "VB NN VB": 0.1, "VB VB NN": 0.05, "VB VB VB": 0.05}
         self._wordSeq = ["the", "cat", "is", "pretty"]
 
-        self._unigramCount = "data/unigram_count.json"
-        self._trigramCount = "data/trigram_count.json"
-        self._bigramCount = "data/bigram_count.json"
-        self._tagWordCount = "data/tag_word_count.json"
-        self._vocabDict = "data/vocab_dict.json"
         self._outputFile = "data/output.pos"
         self._testFile = "data/test.pos"
+        self._trigramCount = "data/trigram_count2.json"
+        self._bigramCount = "data/bigram_count2.json"
+        self._unigramCount = "data/unigram_count2.json"
+        self._tagWordCount = "data/tag_word_count2.json"
+
     """
     def test_bigram_viterbi(self):
         dt = DynamicTable()
@@ -75,12 +75,61 @@ class VeterbiMathTest(unittest.TestCase):
     """
     def test_run(self):
         viterbi = ViterbiMath(self._unigramCount, self._bigramCount,
-            self._trigramCount, self._tagWordCount, self._vocabDict)
-            
-        viterbi.run("data/test.pos", "data/outputtest.txt", 2)
-        #viterbi.run("data/test-obs.pos", "data/output2.pos", 2)
-        #viterbi.run("data/test-obs.pos", "data/output3.pos", 3)
+            self._trigramCount, self._tagWordCount, None)
+ 
+        #wrongkeys = [(item[0] + " " + item2[0]) for item2 in (item for item in viterbi.obsT.items()) if item2[1] > 0]
+        #open("wrongkeys.key", "w").dump(item)
+        """
+        import json
+        with open("data/tag_word_count2.json") as f:
+            tag_word_dict = json.loads(f.read())
 
+        wrongkeys = []
+        for (w,probs) in tag_word_dict.items():
+            for (t,prob) in probs.items():
+                if prob >= 0:
+                    wrongkeys.append(w + " " + t)
+
+
+        with open("dumped.txt", "w") as f:
+            json.dump(wrongkeys, f)
+        """
+        #viterbi.run("data/testlem.pos", "data/outputtest.txt", 2)
+        viterbi.run("data/testlem.pos", "data/outputtest.txt", 3)
+        """
+        viterbi.run("data/lemmatized_test-obs.pos", "data/output2_lem_unk_v5.txt", 2)
+        print "running finished"
+        
+        lines = open("data/output2_lem_unk_v5.txt", "r").read().split("\n")
+        reals = open("data/test-obs.pos", "r").read().split("\n")
+        results = []
+        for (word, tag_word) in zip(reals, lines):
+            try:
+                tag = (tag_word.split())[0]
+            except:
+                pass
+            line = tag + " " + word + "\n"
+            results.append(line)
+        open("data/output2_ori_unk_v5.txt", "w").write("".join(results))
+        """
+        
+        print "start trigram"
+        viterbi.run("data/lemmatized_test-obs.pos", "data/output3_lem_unk_v5.txt", 3)
+
+        print "running finished"
+        lines = open("data/output3_lem_unk_v5.txt", "r").read().split("\n")
+        reals = open("data/test-obs.pos", "r").read().split("\n")
+        results = []
+        for (word, tag_word) in zip(reals, lines):
+            try:
+                tag = (tag_word.split())[0]
+            except:
+                pass
+            line = tag + " " + word + "\n"
+            results.append(line)
+        open("data/output3_ori_unk_v5.txt", "w").write("".join(results))
+        #viterbi.run("data/test-obs.pos", "data/output3.pos", 3)
+         
 
 if __name__ == "__main__":
     unittest.main()
