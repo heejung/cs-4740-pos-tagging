@@ -25,4 +25,12 @@ class SmoothedDistribution(Mapping):
         #transition matrices
         if self._conditioned_count.has_key(key):
             return self._conditioned_count[key]
+        """        
+        tags = key.split()
+        if len(tags) > 2:
+            tagtag = tag[0] + " " + tag[2]
+            if self._conditioned_count.has_key(tagtag):
+                return self._conditioned_count[tagtag]
+            return self._conditioned_count[tag[0]]
+        """
         return self._conditioned_count["SMOOTH"]

@@ -52,12 +52,14 @@ def get_tag_word_matrix(filename):
 
     import math
     minprob = 0.
+    tag_size = float(len(tags))
     vocab_size = float(len(matrix_with_unknown))
     for (w,tag_dict) in matrix_with_unknown.items():
         for (tag, prob) in tag_dict.items():
-            matrix_with_unknown[w][tag] = math.log((matrix_with_unknown[w][tag] + 1.) / (vocab_size + tags[tag]))
+            #matrix_with_unknown[w][tag] = math.log((matrix_with_unknown[w][tag] + 1.) / (vocab_size + tags[tag]))
+            matrix_with_unknown[w][tag] = math.log(matrix_with_unknown[w][tag] / tags[tag])
             minprob = min(matrix_with_unknown[w][tag], minprob)
-    minprob = minprob - 0.001
+    minprob = minprob - 7.
     for (w,tag_dict) in matrix_with_unknown.items():
         matrix_with_unknown[w]["SMOOTH"] = minprob
 
@@ -123,9 +125,9 @@ def get_tag_n_gram(n, filename, tags, bi):
         minprob = 0.
         for (k,v) in count_matrix.items():
             tag = k.split()[1] 
-            count_matrix[k] = math.log((count_matrix[k] + 1.) / (tag_size + tags[tag]))
+            count_matrix[k] = math.log(count_matrix[k] / tags[tag])
             minprob = min(minprob, count_matrix[k])
-        count_matrix["SMOOTH"] = minprob - 0.001
+        count_matrix["SMOOTH"] = minprob - 7. 
     elif n==3:
         tag_size = float(len(tags))
         tag_tot = sum(tags.values())
@@ -141,17 +143,18 @@ def get_tag_n_gram(n, filename, tags, bi):
             tag_prev2 = ks[1]
             tag_prev1 = ks[2]
             tagtag = tag_cur + " " + tag_prev1
-            if bi.has_key(tagtag):
-                tagval = bi[tagtag]
-            else:
-                tagval = 0.
+            #if bi.has_key(tagtag):
+            #    tagval = bi[tagtag]
+            #else:
+            #    tagval = 0.
+            tagval = bi[tagtag]
            
             uniprob = tags[tag_cur]/tag_tot
-            biprob = (tagval+1.) / (tags[tag_prev1]+tag_size)
-            count_matrix[k] = math.log(ctri*(count_matrix[k] + 1.) / (tagval + tag_size) + biprob*cbi + cuni*uniprob)
+            biprob = tagval / tags[tag_prev1]
+            count_matrix[k] = math.log(ctri*count_matrix[k]/tagval + biprob*cbi + cuni*uniprob)
         for (k,v) in count_matrix.items():
             minprob = min(minprob, v)
-        count_matrix["SMOOTH"] = minprob - 0.001 
+        count_matrix["SMOOTH"] = minprob - 7. 
 
     return (count_matrix, counts)
 
@@ -197,8 +200,28 @@ def create_count_matrix(filename, output_dir):
         json.dump(bigram_matrix, f)
 
     (trigram_matrix, trigrams) = get_tag_n_gram(3, filename, tags, bigrams)
+    #trigram_matrix = merge(trigram_matrix, bigram_matrix, tags)
+
     with open(sub_dir + trigram_matrix_name, "w") as f:
         json.dump(trigram_matrix, f)
+
+def merge(a, b, uni):
+    tot = sum(uni.values())
+    cbi = 1./3.
+    cuni = 1./3.
+    for (k,v) in b.items():
+        if "SMOOTH"==tag:
+            continue
+        tag = k.split()[0]
+        a[k] = (v*cbi + cuni*uni[tag]/tot)
+    for (k,v) in uni.items():
+        a[k] = v/tot*cuni
+    minprob = 0.
+    del a["SMOOTH"]
+    for (k,v) in a.items():
+        minprob = min(minprob, v)
+    a["SMOOTH"] = minprob - 7. 
+    return a
 
 def lemmatize_observation(fin, outputfile):
     """Lemmatizes the words.

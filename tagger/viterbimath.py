@@ -184,6 +184,8 @@ class ViterbiMath:
                 tag_prev2 = dt.last(c_prev1, tag_prev1)
                 prev2_prob = dt.prob(c_prev2, tag_prev2)
                 trans_prob = self.transmTri[tag_cur + " " + tag_prev2 + " " + tag_prev1]
+                #if trans_prob == self.transmTri["SMOOTH"]:
+                #    trans_prob = self.transmBi[tag_cur + " " + tag_prev1]
                 prob = obs_tag_prob + trans_prob + prev2_prob
                 if max_tuple[0] <= prob:
                     max_tuple = (prob, tag_prev1)
